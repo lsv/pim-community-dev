@@ -6,6 +6,7 @@ import {useTranslate} from '../../hooks';
 import {CategoryTreeSwitcher} from './CategoryTreeSwitcher';
 import styled from 'styled-components';
 import {CategoryValue} from './RecursiveCategoryTree';
+import {useIsAdmin} from '../../hooks/useIsAdmin';
 
 const CategoryTreesContainer = styled.div`
   height: calc(100vh - 110px);
@@ -118,13 +119,15 @@ const CategoryTrees: React.FC<CategoryTreesProps> = ({
   };
 
   const AllProductsTree = (
-    <Tree
-      value={{id: -2, code: 'all_products'}}
-      label={translate('jstree.all')}
-      isLeaf={true}
-      onClick={() => handleClick({id: -2, code: 'all_products', label: translate('jstree.all')})}
-      selected={selectedNodeId === -2}
-    />
+    useIsAdmin() ?
+      <Tree
+        value={{id: -2, code: 'all_products'}}
+        label={translate('jstree.all')}
+        isLeaf={true}
+        onClick={() => handleClick({id: -2, code: 'all_products', label: translate('jstree.all')})}
+        selected={selectedNodeId === -2}
+      />
+    : null
   );
 
   const isCategorySelected: (category: CategoryValue, _: ParentCategoryTree) => boolean = category => {
@@ -134,7 +137,7 @@ const CategoryTrees: React.FC<CategoryTreesProps> = ({
   return (
     <>
       <CategoryTreesContainer>
-        <CategoryTreeSwitcher trees={trees} onClick={switchTree} />
+        {useIsAdmin() ? <CategoryTreeSwitcher trees={trees} onClick={switchTree} /> : null}
         <CategoryTreeContainer>
           {trees.map(tree => {
             return (
