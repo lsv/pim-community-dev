@@ -1,6 +1,7 @@
 import React from 'react';
 import {ParentCategoryTree, CategoryTreeModel} from './CategoryTree';
 import {Tree} from 'akeneo-design-system/lib/components/Tree/Tree';
+import {useIsAdmin} from '../../hooks/useIsAdmin';
 
 type CategoryValue = {
   id: number;
@@ -45,40 +46,44 @@ const RecursiveCategoryTree: React.FC<RecursiveCategoryTreeProps> = ({
     internalSetChecked(categoryValue.code, checked);
   };
 
+  const showTree = tree.id > 0 ? true : useIsAdmin()
+
   return (
-    <Tree<CategoryValue>
-      label={tree.label}
-      value={{
-        id: tree.id,
-        code: tree.code,
-        label: tree.label,
-      }}
-      isLoading={loading}
-      selected={isCategorySelected ? isCategorySelected(tree, parentTree) : tree.selected}
-      readOnly={isCategoryReadOnly ? isCategoryReadOnly(tree, parentTree) : tree.readOnly}
-      selectable={tree.selectable}
-      isLeaf={Array.isArray(tree.children) && tree.children.length === 0}
-      onChange={handleChange}
-      onOpen={handleOpen}
-      onClick={onClick}
-    >
-      {tree.children &&
-        tree.children.map(childNode => {
-          return (
-            <RecursiveCategoryTree
-              key={childNode.id}
-              tree={childNode}
-              parentTree={{code: tree.code, parent: parentTree}}
-              childrenCallback={childrenCallback}
-              onClick={onClick}
-              isCategorySelected={isCategorySelected}
-              isCategoryReadOnly={isCategoryReadOnly}
-              internalSetChildren={internalSetChildren}
-              internalSetChecked={internalSetChecked}
-            />
-          );
-        })}
-    </Tree>
+    showTree ?
+      <Tree<CategoryValue>
+        label={tree.label}
+        value={{
+          id: tree.id,
+          code: tree.code,
+          label: tree.label,
+        }}
+        isLoading={loading}
+        selected={isCategorySelected ? isCategorySelected(tree, parentTree) : tree.selected}
+        readOnly={isCategoryReadOnly ? isCategoryReadOnly(tree, parentTree) : tree.readOnly}
+        selectable={tree.selectable}
+        isLeaf={Array.isArray(tree.children) && tree.children.length === 0}
+        onChange={handleChange}
+        onOpen={handleOpen}
+        onClick={onClick}
+      >
+        {tree.children &&
+          tree.children.map(childNode => {
+            return (
+              <RecursiveCategoryTree
+                key={childNode.id}
+                tree={childNode}
+                parentTree={{code: tree.code, parent: parentTree}}
+                childrenCallback={childrenCallback}
+                onClick={onClick}
+                isCategorySelected={isCategorySelected}
+                isCategoryReadOnly={isCategoryReadOnly}
+                internalSetChildren={internalSetChildren}
+                internalSetChecked={internalSetChecked}
+              />
+            );
+          })}
+      </Tree>
+    : null
   );
 };
 
