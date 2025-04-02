@@ -7,6 +7,7 @@ use Akeneo\Pim\Enrichment\Component\Product\Model\ProductInterface;
 use Akeneo\Pim\Structure\Component\AttributeTypes;
 use Akeneo\Pim\Structure\Component\Model\AttributeInterface;
 use Akeneo\Tool\Component\StorageUtils\Repository\IdentifiableObjectRepositoryInterface;
+use Akeneo\UserManagement\Bundle\Context\UserContext;
 use Liip\ImagineBundle\Imagine\Cache\CacheManager;
 use Liip\ImagineBundle\Imagine\Data\DataManager;
 use Liip\ImagineBundle\Imagine\Filter\FilterManager;
@@ -33,6 +34,7 @@ class ProductPdfRenderer implements RendererInterface
     protected IdentifiableObjectRepositoryInterface $attributeRepository;
     protected string $template;
     protected ?string $customFont;
+    private UserContext $userContext;
 
     public function __construct(
         Environment $templating,
@@ -41,6 +43,7 @@ class ProductPdfRenderer implements RendererInterface
         CacheManager $cacheManager,
         FilterManager $filterManager,
         IdentifiableObjectRepositoryInterface $attributeRepository,
+        UserContext $userContext,
         string $template,
         ?string $customFont = null
     ) {
@@ -50,6 +53,7 @@ class ProductPdfRenderer implements RendererInterface
         $this->cacheManager = $cacheManager;
         $this->filterManager = $filterManager;
         $this->attributeRepository = $attributeRepository;
+        $this->userContext = $userContext;
         $this->template = $template;
         $this->customFont = $customFont;
     }
@@ -101,7 +105,12 @@ class ProductPdfRenderer implements RendererInterface
      */
     protected function canRenderAttribute(?AttributeInterface $attribute): bool
     {
-        return null !== $attribute;
+        if (null === $attribute) {
+            return false;
+        }
+
+        $isAdmin = $this->userContext->getUser()?->hasRole('ROLE_ADMINISTRATOR');
+        return !(!$isAdmin && $attribute->getGroup()->getCode() === 'notpublic');
     }
 
     /**
@@ -144,6 +153,9 @@ class ProductPdfRenderer implements RendererInterface
 
         foreach ($this->getAttributeCodes($product) as $attributeCode) {
             $attribute = $this->attributeRepository->findOneByIdentifier($attributeCode);
+            if (!$this->canRenderAttribute($attribute)) {
+                continue;
+            }
 
             if (null !== $attribute && AttributeTypes::IMAGE === $attribute->getType()) {
                 $mediaValue = $product->getValue(
