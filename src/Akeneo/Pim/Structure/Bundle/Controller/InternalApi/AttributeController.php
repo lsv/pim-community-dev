@@ -194,6 +194,12 @@ class AttributeController
             $options
         );
 
+        if (!$this->userContext->getUser()?->hasRole('ROLE_ADMINISTRATOR')) {
+            $attributes = array_filter($attributes, static function ($attribute) {
+                return $attribute->getGroup()?->getCode() !== 'notpublic';
+            });
+        }
+
         $normalizedAttributes = array_map(function ($attribute) {
             return $this->lightAttributeNormalizer->normalize(
                 $attribute,

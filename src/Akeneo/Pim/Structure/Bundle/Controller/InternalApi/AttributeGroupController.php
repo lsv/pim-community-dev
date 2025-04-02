@@ -12,6 +12,7 @@ use Akeneo\Tool\Component\StorageUtils\Remover\RemoverInterface;
 use Akeneo\Tool\Component\StorageUtils\Repository\SearchableRepositoryInterface;
 use Akeneo\Tool\Component\StorageUtils\Saver\SaverInterface;
 use Akeneo\Tool\Component\StorageUtils\Updater\ObjectUpdaterInterface;
+use Akeneo\UserManagement\Bundle\Context\UserContext;
 use Doctrine\ORM\EntityRepository;
 use Oro\Bundle\SecurityBundle\Annotation\AclAncestor;
 use Oro\Bundle\SecurityBundle\SecurityFacade;
@@ -84,6 +85,9 @@ class AttributeGroupController
     /** @var FindAttributeCodesForAttributeGroup */
     private $findAttributeCodesForAttributeGroup;
 
+    /** @var UserContext */
+    private $userContext;
+
     public function __construct(
         AttributeGroupRepositoryInterface $attributeGroupRepo,
         SearchableRepositoryInterface $attributeGroupSearchableRepository,
@@ -100,7 +104,8 @@ class AttributeGroupController
         SimpleFactoryInterface $attributeGroupFactory,
         EventDispatcherInterface $eventDispatcher,
         CollectionFilterInterface $inputFilter,
-        FindAttributeCodesForAttributeGroup $findAttributeCodesForAttributeGroup
+        FindAttributeCodesForAttributeGroup $findAttributeCodesForAttributeGroup,
+        UserContext $userContext
     ) {
         $this->attributeGroupRepo                 = $attributeGroupRepo;
         $this->attributeGroupSearchableRepository = $attributeGroupSearchableRepository;
@@ -118,6 +123,7 @@ class AttributeGroupController
         $this->eventDispatcher                    = $eventDispatcher;
         $this->inputFilter                        = $inputFilter;
         $this->findAttributeCodesForAttributeGroup = $findAttributeCodesForAttributeGroup;
+        $this->userContext = $userContext;
     }
 
     /**
@@ -144,6 +150,12 @@ class AttributeGroupController
             );
         }
 
+        if (!$this->userContext->getUser()?->hasRole('ROLE_ADMINISTRATOR')) {
+            $attributeGroups = array_filter($attributeGroups, static function ($group) {
+                return $group->getCode() !== 'notpublic';
+            });
+        }
+
         $normalizedAttributeGroups = [];
 
         foreach ($attributeGroups as $attributeGroup) {
@@ -165,6 +177,12 @@ class AttributeGroupController
         $attributeGroups = $this->attributeGroupRepo->findAll();
 
         $normalizedAttributeGroups = [];
+
+        if (!$this->userContext->getUser()?->hasRole('ROLE_ADMINISTRATOR')) {
+            $attributeGroups = array_filter($attributeGroups, static function ($group) {
+                return $group->getCode() !== 'notpublic';
+            });
+        }
 
         foreach ($attributeGroups as $attributeGroup) {
             $normalizedAttributeGroups[$attributeGroup->getCode()] = $this->normalizer
