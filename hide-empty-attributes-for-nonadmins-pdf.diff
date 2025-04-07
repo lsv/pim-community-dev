@@ -1,0 +1,49 @@
+diff --git a/src/Akeneo/Pim/Enrichment/Bundle/Resources/views/Product/renderPdf.html.twig b/src/Akeneo/Pim/Enrichment/Bundle/Resources/views/Product/renderPdf.html.twig
+index 1a84a96be5..468bea33b8 100644
+--- a/src/Akeneo/Pim/Enrichment/Bundle/Resources/views/Product/renderPdf.html.twig
++++ b/src/Akeneo/Pim/Enrichment/Bundle/Resources/views/Product/renderPdf.html.twig
+@@ -136,24 +136,27 @@
+                                 {% set channel_attribute = attribute.isScopable ? scope : null %}
+                                 {% set content = product.getValue(attribute.code, locale_attribute, channel_attribute) %}
+                                 {% set manualHeight = true %}
+-
+-                                {% if 'pim_catalog_image' == attribute.type and content.data is defined and content.data is not null %}
+-                                    {% set manualHeight = false %}
+-                                {% endif %}
+-
+-                                {% if content != null and manualHeight == true %}
+-                                    {% set manualHeight = attribute.label|length > (content|trim|length / 3) %}
+-                                {% endif %}
+-
+-                                <div class="attributes {{ attribute.type }} {% if contains_han_characters(content) %}han-text{% endif %}"
+-                                        {% if manualHeight %} style="height: {{ (attribute.label|length / 30)|round(0, 'ceil') * 18 + 10 }}px"{% endif %}>
+-                                    <div class="left-column">
+-                                        {{ attribute.label }}
+-                                    </div>
+-                                    <div class="right-column">
+-                                        {{ render_attribute_value(attribute, content, locale)|raw }}
++                                {% set attributeValue = render_attribute_value(attribute, content, locale)|raw %}
++
++                                {% if attributeValue is not empty %}
++                                    {% if 'pim_catalog_image' == attribute.type and content.data is defined and content.data is not null %}
++                                        {% set manualHeight = false %}
++                                    {% endif %}
++
++                                    {% if content != null and manualHeight == true %}
++                                        {% set manualHeight = attribute.label|length > (content|trim|length / 3) %}
++                                    {% endif %}
++
++                                    <div class="attributes {{ attribute.type }} {% if contains_han_characters(content) %}han-text{% endif %}"
++                                            {% if manualHeight %} style="height: {{ (attribute.label|length / 30)|round(0, 'ceil') * 18 + 10 }}px"{% endif %}>
++                                        <div class="left-column">
++                                            {{ attribute.label }}
++                                        </div>
++                                        <div class="right-column">
++                                            {{ attributeValue }}
++                                        </div>
+                                     </div>
+-                                </div>
++                                {% endif %}
+                             {% endblock %}
+                         {% endfor %}
+                     </div>
