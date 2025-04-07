@@ -108,6 +108,46 @@ class ProductController
             $context
         );
 
+        $isEmptyDataArray = function (string $code, array $data): bool {
+            if ('price' === $code) {
+                return false;
+            }
+
+            if (isset($data['amount'])) {
+                return empty($data['amount']);
+            }
+
+            if (array_key_exists('filePath', $data)) {
+                return empty($data['filePath']);
+            }
+
+            if (array_is_list($data) && count($data) > 0) {
+                return false;
+            }
+
+            return true;
+        };
+
+        if (!$this->userContext->getUser()?->hasRole('ROLE_ADMINISTRATOR')) {
+            $unsets = [];
+            foreach ($normalizedProduct['values'] as $code => $scopes) {
+                foreach ($scopes as $scope) {
+                    if (
+                        (empty($scope['data']))
+                        ||
+                        (is_array($scope['data']) && $isEmptyDataArray($code, $scope['data']))
+                    ) {
+                        $unsets[] = $code;
+                        break;
+                    }
+                }
+            }
+
+            foreach ($unsets as $unset) {
+                unset($normalizedProduct['values'][$unset]);
+            }
+        }
+
         return new JsonResponse($normalizedProduct);
     }
 
