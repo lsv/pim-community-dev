@@ -1,0 +1,39 @@
+diff --git a/src/Akeneo/Platform/Bundle/UIBundle/Resources/views/index.html.twig b/src/Akeneo/Platform/Bundle/UIBundle/Resources/views/index.html.twig
+index 3830a69c0e..e9114abc87 100644
+--- a/src/Akeneo/Platform/Bundle/UIBundle/Resources/views/index.html.twig
++++ b/src/Akeneo/Platform/Bundle/UIBundle/Resources/views/index.html.twig
+@@ -26,5 +26,34 @@
+             </div>
+         </div>
+         <div class="hash-loading-mask"></div>
++        <script nonce="3352c80eee760090d48653764533268dc5c46dff">
++          jQuery(function($) {
++            const observer = new MutationObserver(function(mutations) {
++              mutations.forEach(function(mutation) {
++                if ($(mutation.target).find('.entity-edit-form .AknSubsection > div').length) {
++                  $('.entity-edit-form .AknSubsection > div').addClass('hide');
++                  if (!$('.entity-edit-form .AknSubsection > header > .group-label').data('click-handler-attached')) {
++                    $('.entity-edit-form .AknSubsection > header > .group-label')
++                      .css('cursor', 'pointer')
++                      .click((e) => {
++                        e.preventDefault();
++                        const div = $(e.currentTarget).parent().next();
++                        div.toggleClass('hide');
++                      });
++
++                    $('.entity-edit-form .AknSubsection > header > .group-label').data('click-handler-attached', true);
++                  }
++
++                  observer.disconnect();
++                }
++              });
++            });
++
++            observer.observe(document.body, {
++              childList: true,
++              subtree: true
++            });
++          });
++        </script>
+     </body>
+ </html>
