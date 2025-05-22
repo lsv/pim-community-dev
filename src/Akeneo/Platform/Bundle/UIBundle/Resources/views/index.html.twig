@@ -28,10 +28,10 @@
         <div class="hash-loading-mask"></div>
         <script>
           function initSubsectionToggler($) {
-            if ($('.entity-edit-form .AknSubsection > div').length) {
-              $('.entity-edit-form .AknSubsection > div').addClass('hide');
+            if ($('.entity-edit-form .tab-pane.active.object-values .AknSubsection > div').length) {
+              $('.entity-edit-form .tab-pane.active.object-values .AknSubsection > div').addClass('hide');
 
-              $('.entity-edit-form .AknSubsection > header > .group-label').each(function () {
+              $('.entity-edit-form .tab-pane.active.object-values .AknSubsection > header > .group-label').each(function () {
                 const $label = $(this);
                 if (!$label.data('click-handler-attached')) {
                   $label
