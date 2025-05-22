@@ -16,6 +16,7 @@ use Akeneo\Tool\Component\Connector\Writer\File\FileExporterPathGeneratorInterfa
 use Akeneo\Tool\Component\Connector\Writer\File\FlatItemBufferFlusher;
 use Akeneo\Tool\Component\FileStorage\FilesystemProvider;
 use Akeneo\Tool\Component\FileStorage\Repository\FileInfoRepositoryInterface;
+use Doctrine\ORM\EntityManagerInterface;
 
 /**
  * Write product data into a csv file on the local filesystem
@@ -28,6 +29,7 @@ class ProductWriter extends AbstractItemMediaWriter implements ItemWriterInterfa
 {
     protected GenerateFlatHeadersFromFamilyCodesInterface $generateHeadersFromFamilyCodes;
     protected GenerateFlatHeadersFromAttributeCodesInterface $generateHeadersFromAttributeCodes;
+    protected ?EntityManagerInterface $entityManager;
 
     protected array $familyCodes = [];
     private bool $hasItems = false;
@@ -44,7 +46,8 @@ class ProductWriter extends AbstractItemMediaWriter implements ItemWriterInterfa
         FileInfoRepositoryInterface $fileInfoRepository,
         FilesystemProvider $filesystemProvider,
         array $mediaAttributeTypes,
-        string $jobParamFilePath = self::DEFAULT_FILE_PATH
+        string $jobParamFilePath = self::DEFAULT_FILE_PATH,
+        ?EntityManagerInterface $manager = null,
     ) {
         parent::__construct(
             $arrayConverter,
@@ -61,6 +64,7 @@ class ProductWriter extends AbstractItemMediaWriter implements ItemWriterInterfa
 
         $this->generateHeadersFromFamilyCodes = $generateHeadersFromFamilyCodes;
         $this->generateHeadersFromAttributeCodes = $generateHeadersFromAttributeCodes;
+        $this->entityManager = $manager;
     }
 
     /**
@@ -79,8 +83,18 @@ class ProductWriter extends AbstractItemMediaWriter implements ItemWriterInterfa
      */
     public function write(array $items): void
     {
+        $notPublic = $this->getNotPublicAttributeCodes();
+
         $this->hasItems = true;
-        foreach ($items as $item) {
+        foreach ($items as $key => &$item) {
+            if ($this->entityManager && $notPublic) {
+                foreach ($item['values'] as $valueKey => $value) {
+                    if (\in_array($valueKey, $notPublic)) {
+                        unset($item['values'][$valueKey]);
+                    }
+                }
+            }
+
             if (isset($item['family']) && !in_array($item['family'], $this->familyCodes)) {
                 $this->familyCodes[] = $item['family'];
             }
@@ -130,6 +144,11 @@ class ProductWriter extends AbstractItemMediaWriter implements ItemWriterInterfa
             }
         }
 
+        $notPublic = $this->getNotPublicAttributeCodes();
+        $headerStrings = \array_filter($headerStrings, function ($headerString) use ($notPublic) {
+            return !\in_array($headerString, $notPublic);
+        });
+
         return $headerStrings;
     }
 
@@ -167,5 +186,25 @@ class ProductWriter extends AbstractItemMediaWriter implements ItemWriterInterfa
         }
 
         return $converterOptions;
+    }
+
+    /**
+     * @return string[]
+     */
+    private function getNotPublicAttributeCodes(): array
+    {
+        if (!$this->entityManager) {
+            return [];
+        }
+
+        $sql = <<<SQL
+SELECT a.code FROM pim_catalog_attribute a
+INNER JOIN pim_catalog_attribute_group ag ON ag.id = a.group_id
+WHERE ag.code = 'notpublic'
+SQL;
+        $connection = $this->entityManager->getConnection();
+        $stmt = $connection->prepare($sql);
+        $result = $stmt->executeQuery();
+        return $result->fetchFirstColumn();
     }
 }

@@ -91,6 +91,7 @@ services:
             - '@akeneo_file_storage.file_storage.filesystem_provider'
             - ['pim_catalog_file', 'pim_catalog_image']
             - 'filePathProduct'
+            - '@Doctrine\ORM\EntityManagerInterface'
 
     pim_connector.writer.file.csv_product_model_quick_export:
         class: 'Akeneo\Pim\Enrichment\Component\Product\Connector\Writer\File\Csv\ProductModelWriter'
