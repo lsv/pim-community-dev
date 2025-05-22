@@ -137,19 +137,29 @@ class ProductPdfRenderer implements RendererInterface
         }
 
         foreach ($attributeCodes as $attributeCode) {
+            /** @var AttributeInterface $attribute */
             $attribute = $this->attributeRepository->findOneByIdentifier($attributeCode);
             if (in_array($attribute->getCode(), $used, true)) {
                 continue;
             }
 
             if ($this->canRenderAttribute($attribute, false)) {
-                $groupLabel = $attribute->getGroup()->getLabel();
-                if (!isset($groups[$groupLabel])) {
-                    $groups[$groupLabel] = [];
+                $group = $attribute->getGroup();
+                if (!isset($groups[$group->getLabel()])) {
+                    $groups[$group->getLabel()] = [
+                        'group' => $group,
+                        'data' => [],
+                    ];
                 }
 
-                $groups[$groupLabel][$attribute->getCode()] = $attribute;
+                $groups[$group->getLabel()]['data'][$attribute->getCode()] = $attribute;
             }
+        }
+
+        foreach ($groups as &$row) {
+            \usort($row['data'], static function (AttributeInterface $a, AttributeInterface $b) {
+                return $a->getSortOrder() <=> $b->getSortOrder();
+            });
         }
 
         return $groups;

@@ -149,7 +149,7 @@
         {% block attribute_group %}
             <div class="group">
                 <h2 style="text-transform: uppercase">{{ group }}</h2>
-                {% for attribute in attributes %}
+                {% for attribute in attributes.data %}
                     {% block attribute %}
                         {% set locale_attribute = attribute.isLocalizable or attribute.isLocaleSpecific ? locale : null %}
                         {% set channel_attribute = attribute.isScopable ? scope : null %}
