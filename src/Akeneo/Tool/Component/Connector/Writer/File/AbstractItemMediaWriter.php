@@ -122,6 +122,53 @@ abstract class AbstractItemMediaWriter implements
             $flatItems = $this->flatTranslator->translate($flatItems, $fileLocale, $scope, $headerWithLabel);
         }
 
+        foreach ($flatItems as &$flatItem) {
+            foreach ($flatItem as $key => $value) {
+                if (\str_starts_with($key, 'short_description')) {
+                    unset($flatItem[$key]);
+                    continue;
+                }
+
+                if (\str_starts_with($key, 'meta_')) {
+                    unset($flatItem[$key]);
+                    continue;
+                }
+
+                if ($key === 'family--[family]') {
+                    unset($flatItem[$key]);
+                    continue;
+                }
+
+                if ($key === 'groups--[groups]') {
+                    unset($flatItem[$key]);
+                    continue;
+                }
+
+                if ($key === 'enabled--[enabled]') {
+                    unset($flatItem[$key]);
+                    continue;
+                }
+
+                if ($key === 'categories--[categories]') {
+                    unset($flatItem[$key]);
+                    continue;
+                }
+
+                if (
+                    \str_contains($key, 'en_US')
+                    ||
+                    \str_contains($key, 'fi_FI')
+                    ||
+                    \str_contains($key, 'nb_NO')
+                    ||
+                    \str_contains($key, 'sv_SE')
+                ) {
+                    unset($flatItem[$key]);
+                }
+            }
+        }
+        unset($flatItem);
+
         $options = [];
         $options['withHeader'] = $parameters->get('withHeader');
 

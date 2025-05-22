@@ -151,15 +151,14 @@ class ProductWriter extends AbstractItemMediaWriter
 
         $ignoredAttributes = $this->getIgnoredAttributes();
         $notPublic = $this->getNotPublicAttributeCodes();
-        $headerStrings = \array_filter($headerStrings, function ($headerString) use ($notPublic, $ignoredAttributes) {
+
+        return \array_filter($headerStrings, static function ($headerString) use ($notPublic, $ignoredAttributes) {
             if (\in_array($headerString, $ignoredAttributes, false)) {
                 return false;
             }
 
             return !\in_array($headerString, $notPublic, false);
         });
-
-        return $headerStrings;
     }
 
     /**
