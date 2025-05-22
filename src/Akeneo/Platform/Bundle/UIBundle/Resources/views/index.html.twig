@@ -27,9 +27,14 @@
         </div>
         <div class="hash-loading-mask"></div>
         <script>
-          function initSubsectionToggler($) {
-            if ($('.entity-edit-form .tab-pane.active.object-values .AknSubsection > div').length) {
-              $('.entity-edit-form .tab-pane.active.object-values .AknSubsection > div').addClass('hide');
+          jQuery(function($) {
+            let lastUrl = location.href;
+
+            function initSubsectionToggler() {
+              const $subsections = $('.entity-edit-form .tab-pane.active.object-values .AknSubsection > div');
+              if (!$subsections.length) return; // Wait until content is present
+
+              $subsections.addClass('hide');
 
               $('.entity-edit-form .tab-pane.active.object-values .AknSubsection > header > .group-label').each(function () {
                 const $label = $(this);
@@ -45,23 +50,29 @@
                 }
               });
             }
-          }
 
-          jQuery(function($) {
-            let lastUrl = location.href;
+            function waitForSubsectionsAndInit(retries = 20) {
+              if (retries <= 0) return;
+
+              if ($('.entity-edit-form .tab-pane.active.object-values .AknSubsection > div').length) {
+                initSubsectionToggler();
+              } else {
+                setTimeout(() => waitForSubsectionsAndInit(retries - 1), 250); // try again in 250ms
+              }
+            }
 
             function checkUrlChange() {
               const currentUrl = location.href;
               if (currentUrl !== lastUrl) {
                 lastUrl = currentUrl;
-                initSubsectionToggler($);
+                waitForSubsectionsAndInit();
               }
             }
 
-            // Run initially
-            initSubsectionToggler($);
+            // Initial call
+            waitForSubsectionsAndInit();
 
-            // Poll for URL changes every 500ms
+            // Watch for URL changes
             setInterval(checkUrlChange, 500);
           });
         </script>
