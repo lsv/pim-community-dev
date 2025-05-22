@@ -8,6 +8,7 @@ use Akeneo\Pim\Structure\Component\AttributeTypes;
 use Akeneo\Pim\Structure\Component\Model\AttributeInterface;
 use Akeneo\Tool\Component\StorageUtils\Repository\IdentifiableObjectRepositoryInterface;
 use Akeneo\UserManagement\Bundle\Context\UserContext;
+use Liip\ImagineBundle\Exception\Binary\Loader\NotLoadableException;
 use Liip\ImagineBundle\Imagine\Cache\CacheManager;
 use Liip\ImagineBundle\Imagine\Data\DataManager;
 use Liip\ImagineBundle\Imagine\Filter\FilterManager;
@@ -72,9 +73,11 @@ class ProductPdfRenderer implements RendererInterface
             $context,
             [
                 'product' => $object,
-                'groupedAttributes' => $this->getGroupedAttributes($object),
+                'groupedAttributes' => $this->getGroupedAttributes($object, ['short_description', 'description']),
                 'imagePaths' => $imagePaths,
                 'customFont' => $this->customFont,
+                'shortDescription' => $this->getAttribute('short_description', $object),
+                'longDescription' => $this->getAttribute('description', $object),
             ]
         );
 
@@ -103,9 +106,13 @@ class ProductPdfRenderer implements RendererInterface
     /**
      * Return true if the attribute should be rendered
      */
-    protected function canRenderAttribute(?AttributeInterface $attribute): bool
+    protected function canRenderAttribute(?AttributeInterface $attribute, bool $includeImagePaths): bool
     {
         if (null === $attribute) {
+            return false;
+        }
+
+        if (!$includeImagePaths && AttributeTypes::IMAGE === $attribute->getType()) {
             return false;
         }
 
@@ -116,9 +123,11 @@ class ProductPdfRenderer implements RendererInterface
     /**
      * Get attributes grouped by attribute group
      *
+     * @param string[] $used
+     *
      * @return AttributeInterface[]
      */
-    protected function getGroupedAttributes(ProductInterface $product): array
+    protected function getGroupedAttributes(ProductInterface $product, array $used): array
     {
         $groups = [];
 
@@ -129,7 +138,11 @@ class ProductPdfRenderer implements RendererInterface
 
         foreach ($attributeCodes as $attributeCode) {
             $attribute = $this->attributeRepository->findOneByIdentifier($attributeCode);
-            if ($this->canRenderAttribute($attribute)) {
+            if (in_array($attribute->getCode(), $used, true)) {
+                continue;
+            }
+
+            if ($this->canRenderAttribute($attribute, false)) {
                 $groupLabel = $attribute->getGroup()->getLabel();
                 if (!isset($groups[$groupLabel])) {
                     $groups[$groupLabel] = [];
@@ -140,6 +153,23 @@ class ProductPdfRenderer implements RendererInterface
         }
 
         return $groups;
+    }
+
+    protected function getAttribute(string $code, ProductInterface $product): ?AttributeInterface
+    {
+        $attributeCodes = $product->getUsedAttributeCodes();
+        if ($product->getFamily()) {
+            $attributeCodes = array_unique(array_merge($attributeCodes, $product->getFamily()->getAttributeCodes()));
+        }
+
+        foreach ($attributeCodes as $attributeCode) {
+            $attribute = $this->attributeRepository->findOneByIdentifier($attributeCode);
+            if ($attribute->getCode() === $code) {
+                return $attribute;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -153,7 +183,7 @@ class ProductPdfRenderer implements RendererInterface
 
         foreach ($this->getAttributeCodes($product) as $attributeCode) {
             $attribute = $this->attributeRepository->findOneByIdentifier($attributeCode);
-            if (!$this->canRenderAttribute($attribute)) {
+            if (!$this->canRenderAttribute($attribute, true)) {
                 continue;
             }
 
@@ -186,12 +216,17 @@ class ProductPdfRenderer implements RendererInterface
     {
         foreach ($imagePaths as $path) {
             if (!$this->cacheManager->isStored($path, $filter)) {
-                $binary = $this->dataManager->find($filter, $path);
-                $this->cacheManager->store(
-                    $this->filterManager->applyFilter($binary, $filter),
-                    $path,
-                    $filter
-                );
+                try {
+                    $binary = $this->dataManager->find($filter, $path);
+                    $this->cacheManager->store(
+                        $this->filterManager->applyFilter($binary, $filter),
+                        $path,
+                        $filter
+                    );
+                } catch (NotLoadableException $exception) {
+
+                }
+
             }
         }
     }
@@ -209,6 +244,6 @@ class ProductPdfRenderer implements RendererInterface
                     'filter' => static::THUMBNAIL_FILTER,
                 ]
             )
-            ->setDefined(['groupedAttributes', 'imagePaths', 'customFont']);
+            ->setDefined(['groupedAttributes', 'imagePaths', 'customFont', 'longDescription', 'shortDescription']);
     }
 }

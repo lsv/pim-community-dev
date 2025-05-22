@@ -33,6 +33,7 @@
             }
 
             .images {
+                margin-top: 50px;
                 width: 100%;
                 overflow: hidden;
             }
@@ -46,16 +47,12 @@
 
             .attribute-groups h2 {
                 width: 100%;
-                background: #7887AB;
-                color: white;
                 padding: 2.5px 5px;
                 font-size: 23px;
-                text-transform: uppercase;
-                margin: 0px;
+                margin: 0;
             }
 
             .group {
-                border: 1px solid #aaa;
                 margin-bottom: 20px;
             }
 
@@ -72,8 +69,9 @@
             }
 
             .right-column {
+                text-align: right;
                 margin-left: 35%;
-                padding: 5px;
+                padding: 5px 0;
                 width: 65%;
             }
 
@@ -106,9 +104,11 @@
                 border: 1px solid #e8ebee;
             }
             table > tbody > tr:nth-child(2n+1) > td {
-                background: #f6f7fb;
+                background: #efefef;
             }
-
+            .row-1 {
+                background: #efefef;
+            }
         </style>
     </head>
     <body>
@@ -118,12 +118,26 @@
                 <span class="rendering-date">{{ renderingDate|date }}</span>
             {% endblock %}
         </div>
+        <div class="short-desc">
+            {% set locale_attribute = shortDescription.isLocalizable or shortDescription.isLocaleSpecific ? locale : null %}
+            {% set channel_attribute = shortDescription.isScopable ? scope : null %}
+            {% set content = product.getValue(shortDescription.code, locale_attribute, channel_attribute) %}
+            {% set attributeValue = render_attribute_value(shortDescription, content, locale)|raw %}
+            {{ attributeValue|raw }}
+        </div>
         <div class="images">
             {% block images %}
                 {% for imagePath in imagePaths %}
                     <img src="media/cache/{{ filter }}/{{ imagePath }}">
                 {% endfor %}
             {% endblock %}
+        </div>
+        <div class="long-desc">
+            {% set locale_attribute = longDescription.isLocalizable or longDescription.isLocaleSpecific ? locale : null %}
+            {% set channel_attribute = longDescription.isScopable ? scope : null %}
+            {% set content = product.getValue(longDescription.code, locale_attribute, channel_attribute) %}
+            {% set attributeValue = render_attribute_value(longDescription, content, locale)|raw %}
+            {{ attributeValue|raw }}
         </div>
         <div class="attribute-groups">
             {% for group, attributes in groupedAttributes %}
@@ -147,13 +161,13 @@
                                         {% set manualHeight = attribute.label|length > (content|trim|length / 3) %}
                                     {% endif %}
 
-                                    <div class="attributes {{ attribute.type }} {% if contains_han_characters(content) %}han-text{% endif %}"
+                                    <div class="attributes {{ attribute.type }} {% if contains_han_characters(content) %}han-text{% endif %} row-{{ loop.index0 % 2 }}"
                                             {% if manualHeight %} style="height: {{ (attribute.label|length / 30)|round(0, 'ceil') * 18 + 10 }}px"{% endif %}>
                                         <div class="left-column">
                                             {{ attribute.label }}
                                         </div>
                                         <div class="right-column">
-                                            {{ attributeValue }}
+                                            {{ attributeValue|raw }}
                                         </div>
                                     </div>
                                 {% endif %}

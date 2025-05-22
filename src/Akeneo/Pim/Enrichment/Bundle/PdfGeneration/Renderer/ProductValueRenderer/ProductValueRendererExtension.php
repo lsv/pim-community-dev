@@ -27,8 +27,14 @@ class ProductValueRendererExtension extends AbstractExtension
 
     public function renderAttributeValue(Environment $environment, AttributeInterface $attribute, ?ValueInterface $productValue, string $localeCode): ?string
     {
-        return $this->productValueRendererRegistry
+        $value = $this->productValueRendererRegistry
             ->getProductValueRenderer($attribute->getType())
             ->render($environment, $attribute, $productValue, $localeCode);
+
+        if (in_array($attribute->getType(), ['pim_catalog_metric', 'pim_catalog_number'])) {
+            return number_format((float) $value, 0, ',', '');
+        }
+
+        return $value;
     }
 }
