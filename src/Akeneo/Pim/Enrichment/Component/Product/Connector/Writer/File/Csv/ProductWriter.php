@@ -25,7 +25,7 @@ use Doctrine\ORM\EntityManagerInterface;
  * @copyright 2015 Akeneo SAS (http://www.akeneo.com)
  * @license   http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
-class ProductWriter extends AbstractItemMediaWriter implements ItemWriterInterface, InitializableInterface
+class ProductWriter extends AbstractItemMediaWriter
 {
     protected GenerateFlatHeadersFromFamilyCodesInterface $generateHeadersFromFamilyCodes;
     protected GenerateFlatHeadersFromAttributeCodesInterface $generateHeadersFromAttributeCodes;
@@ -86,7 +86,7 @@ class ProductWriter extends AbstractItemMediaWriter implements ItemWriterInterfa
         $notPublic = $this->getNotPublicAttributeCodes();
 
         $this->hasItems = true;
-        foreach ($items as $key => &$item) {
+        foreach ($items as &$item) {
             if ($this->entityManager && $notPublic) {
                 foreach ($item['values'] as $valueKey => $value) {
                     if (\in_array($valueKey, $notPublic)) {
@@ -99,6 +99,7 @@ class ProductWriter extends AbstractItemMediaWriter implements ItemWriterInterfa
                 $this->familyCodes[] = $item['family'];
             }
         }
+        unset($item);
 
         parent::write($items);
     }
@@ -132,7 +133,7 @@ class ProductWriter extends AbstractItemMediaWriter implements ItemWriterInterfa
             $headers = ($this->generateHeadersFromFamilyCodes)($this->familyCodes, $channelCode, $localeCodes);
         }
 
-        $withMedia = (!$parameters->has('with_media') || $parameters->has('with_media') && $parameters->get('with_media'));
+        $withMedia = (!$parameters->has('with_media') || ($parameters->has('with_media') && $parameters->get('with_media')));
 
         $headerStrings = [];
         foreach ($headers as $header) {
@@ -170,9 +171,9 @@ class ProductWriter extends AbstractItemMediaWriter implements ItemWriterInterfa
     /**
      * {@inheritdoc}
      */
-    protected function getItemIdentifier(array $product): string
+    protected function getItemIdentifier(array $item): string
     {
-        return $product['identifier'] ?? $product['uuid'];
+        return $item['identifier'] ?? $item['uuid'];
     }
 
     /**
@@ -204,7 +205,6 @@ WHERE ag.code = 'notpublic'
 SQL;
         $connection = $this->entityManager->getConnection();
         $stmt = $connection->prepare($sql);
-        $result = $stmt->executeQuery();
-        return $result->fetchFirstColumn();
+        return $stmt->executeQuery()->fetchFirstColumn();
     }
 }

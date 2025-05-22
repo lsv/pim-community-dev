@@ -16,6 +16,7 @@ use Akeneo\Tool\Component\Connector\Writer\File\FileExporterPathGeneratorInterfa
 use Akeneo\Tool\Component\Connector\Writer\File\FlatItemBufferFlusher;
 use Akeneo\Tool\Component\FileStorage\FilesystemProvider;
 use Akeneo\Tool\Component\FileStorage\Repository\FileInfoRepositoryInterface;
+use Doctrine\ORM\EntityManagerInterface;
 
 /**
  * Write product data into a XLSX file on the local filesystem
@@ -24,10 +25,11 @@ use Akeneo\Tool\Component\FileStorage\Repository\FileInfoRepositoryInterface;
  * @copyright 2016 Akeneo SAS (http://www.akeneo.com)
  * @license   http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
-class ProductWriter extends AbstractItemMediaWriter implements ItemWriterInterface, InitializableInterface
+class ProductWriter extends AbstractItemMediaWriter
 {
     protected GenerateFlatHeadersFromFamilyCodesInterface $generateHeadersFromFamilyCodes;
     protected GenerateFlatHeadersFromAttributeCodesInterface $generateHeadersFromAttributeCodes;
+    protected ?EntityManagerInterface $entityManager;
     protected array $familyCodes = [];
     private bool $hasItems = false;
 
@@ -43,7 +45,8 @@ class ProductWriter extends AbstractItemMediaWriter implements ItemWriterInterfa
         FileInfoRepositoryInterface $fileInfoRepository,
         FilesystemProvider $filesystemProvider,
         array $mediaAttributeTypes,
-        string $jobParamFilePath = self::DEFAULT_FILE_PATH
+        string $jobParamFilePath = self::DEFAULT_FILE_PATH,
+        ?EntityManagerInterface $manager = null,
     ) {
         parent::__construct(
             $arrayConverter,
@@ -60,6 +63,7 @@ class ProductWriter extends AbstractItemMediaWriter implements ItemWriterInterfa
 
         $this->generateHeadersFromFamilyCodes = $generateHeadersFromFamilyCodes;
         $this->generateHeadersFromAttributeCodes = $generateHeadersFromAttributeCodes;
+        $this->entityManager = $manager;
     }
 
     /**
@@ -78,12 +82,23 @@ class ProductWriter extends AbstractItemMediaWriter implements ItemWriterInterfa
      */
     public function write(array $items): void
     {
+        $notPublic = $this->getNotPublicAttributeCodes();
+
         $this->hasItems = true;
-        foreach ($items as $item) {
+        foreach ($items as &$item) {
+            if ($this->entityManager && $notPublic) {
+                foreach ($item['values'] as $valueKey => $value) {
+                    if (\in_array($valueKey, $notPublic)) {
+                        unset($item['values'][$valueKey]);
+                    }
+                }
+            }
+
             if (isset($item['family']) && !in_array($item['family'], $this->familyCodes)) {
                 $this->familyCodes[] = $item['family'];
             }
         }
+        unset($item);
 
         parent::write($items);
     }
@@ -117,7 +132,7 @@ class ProductWriter extends AbstractItemMediaWriter implements ItemWriterInterfa
             $headers = ($this->generateHeadersFromFamilyCodes)($this->familyCodes, $channelCode, $localeCodes);
         }
 
-        $withMedia = (!$parameters->has('with_media') || $parameters->has('with_media') && $parameters->get('with_media'));
+        $withMedia = (!$parameters->has('with_media') || ($parameters->has('with_media') && $parameters->get('with_media')));
 
         $headerStrings = [];
         foreach ($headers as $header) {
@@ -129,7 +144,10 @@ class ProductWriter extends AbstractItemMediaWriter implements ItemWriterInterfa
             }
         }
 
-        return $headerStrings;
+        $notPublic = $this->getNotPublicAttributeCodes();
+        return \array_filter($headerStrings, static function ($headerString) use ($notPublic) {
+            return !\in_array($headerString, $notPublic, false);
+        });
     }
 
     /**
@@ -143,9 +161,9 @@ class ProductWriter extends AbstractItemMediaWriter implements ItemWriterInterfa
     /**
      * {@inheritdoc}
      */
-    protected function getItemIdentifier(array $product): string
+    protected function getItemIdentifier(array $item): string
     {
-        return $product['identifier'] ?? $product['uuid'];
+        return $item['identifier'] ?? $item['uuid'];
     }
 
     /**
@@ -159,5 +177,24 @@ class ProductWriter extends AbstractItemMediaWriter implements ItemWriterInterfa
         }
 
         return $converterOptions;
+    }
+
+    /**
+     * @return string[]
+     */
+    private function getNotPublicAttributeCodes(): array
+    {
+        if (!$this->entityManager) {
+            return [];
+        }
+
+        $sql = <<<SQL
+SELECT a.code FROM pim_catalog_attribute a
+INNER JOIN pim_catalog_attribute_group ag ON ag.id = a.group_id
+WHERE ag.code = 'notpublic'
+SQL;
+        $connection = $this->entityManager->getConnection();
+        $stmt = $connection->prepare($sql);
+        return $stmt->executeQuery()->fetchFirstColumn();
     }
 }
