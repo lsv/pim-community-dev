@@ -6,8 +6,6 @@ use Akeneo\Pim\Enrichment\Component\Product\Connector\FlatTranslator\FlatTransla
 use Akeneo\Pim\Enrichment\Component\Product\Connector\Writer\File\GenerateFlatHeadersFromAttributeCodesInterface;
 use Akeneo\Pim\Enrichment\Component\Product\Connector\Writer\File\GenerateFlatHeadersFromFamilyCodesInterface;
 use Akeneo\Pim\Structure\Component\Repository\AttributeRepositoryInterface;
-use Akeneo\Tool\Component\Batch\Item\InitializableInterface;
-use Akeneo\Tool\Component\Batch\Item\ItemWriterInterface;
 use Akeneo\Tool\Component\Batch\Job\JobParameters;
 use Akeneo\Tool\Component\Buffer\BufferFactory;
 use Akeneo\Tool\Component\Connector\ArrayConverter\ArrayConverterInterface;
@@ -82,13 +80,19 @@ class ProductWriter extends AbstractItemMediaWriter
      */
     public function write(array $items): void
     {
+        $ignoredAttributes = $this->getIgnoredAttributes();
         $notPublic = $this->getNotPublicAttributeCodes();
 
         $this->hasItems = true;
         foreach ($items as &$item) {
             if ($this->entityManager && $notPublic) {
                 foreach ($item['values'] as $valueKey => $value) {
-                    if (\in_array($valueKey, $notPublic)) {
+                    if (\in_array($valueKey, $ignoredAttributes, false)) {
+                        unset($item['values'][$valueKey]);
+                        continue;
+                    }
+
+                    if (\in_array($valueKey, $notPublic, false)) {
                         unset($item['values'][$valueKey]);
                     }
                 }
@@ -144,8 +148,13 @@ class ProductWriter extends AbstractItemMediaWriter
             }
         }
 
+        $ignoredAttributes = $this->getIgnoredAttributes();
         $notPublic = $this->getNotPublicAttributeCodes();
-        return \array_filter($headerStrings, static function ($headerString) use ($notPublic) {
+        return \array_filter($headerStrings, static function ($headerString) use ($notPublic, $ignoredAttributes) {
+            if (\in_array($headerString, $ignoredAttributes, false)) {
+                return false;
+            }
+
             return !\in_array($headerString, $notPublic, false);
         });
     }
@@ -177,6 +186,53 @@ class ProductWriter extends AbstractItemMediaWriter
         }
 
         return $converterOptions;
+    }
+
+    /**
+     * @return string[]
+     */
+    private function getIgnoredAttributes(): array
+    {
+        return [
+            'base_image',
+            'categories',
+            'document',
+            'ean',
+            'enabled',
+            'family',
+            'groups',
+            'image_extra_1',
+            'image_extra_2',
+            'image_extra_3',
+            'image_extra_4',
+            'image_extra_5',
+            'image_extra_6',
+            'image_extra_7',
+            'image_extra_8',
+            'image_extra_9',
+            'image_extra_10',
+            'image_extra_11',
+            'image_extra_12',
+            'image_extra_13',
+            'image_extra_14',
+            'image_extra_15',
+            'image_extra_16',
+            'image_extra_17',
+            'image_extra_18',
+            'image_extra_19',
+            'image_extra_20',
+            'image_extra_21',
+            'image_extra_22',
+            'image_extra_23',
+            'image_extra_24',
+            'image_extra_25',
+            'image_extra_26',
+            'image_extra_27',
+            'image_extra_28',
+            'image_extra_29',
+            'image_extra_30',
+            'toldkode',
+        ];
     }
 
     /**
