@@ -48,13 +48,21 @@
           }
 
           jQuery(function($) {
-            // Run on first load
+            let lastUrl = location.href;
+
+            function checkUrlChange() {
+              const currentUrl = location.href;
+              if (currentUrl !== lastUrl) {
+                lastUrl = currentUrl;
+                initSubsectionToggler($);
+              }
+            }
+
+            // Run initially
             initSubsectionToggler($);
 
-            // Re-run after every AJAX load
-            $(document).ajaxComplete(function() {
-              initSubsectionToggler($);
-            });
+            // Poll for URL changes every 500ms
+            setInterval(checkUrlChange, 500);
           });
         </script>
     </body>
