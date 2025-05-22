@@ -26,32 +26,34 @@
             </div>
         </div>
         <div class="hash-loading-mask"></div>
-        <script nonce="3352c80eee760090d48653764533268dc5c46dff">
-          jQuery(function($) {
-            const observer = new MutationObserver(function(mutations) {
-              mutations.forEach(function(mutation) {
-                if ($(mutation.target).find('.entity-edit-form .AknSubsection > div').length) {
-                  $('.entity-edit-form .AknSubsection > div').addClass('hide');
-                  if (!$('.entity-edit-form .AknSubsection > header > .group-label').data('click-handler-attached')) {
-                    $('.entity-edit-form .AknSubsection > header > .group-label')
-                      .css('cursor', 'pointer')
-                      .click((e) => {
-                        e.preventDefault();
-                        const div = $(e.currentTarget).parent().next();
-                        div.toggleClass('hide');
-                      });
+        <script>
+          function initSubsectionToggler($) {
+            if ($('.entity-edit-form .AknSubsection > div').length) {
+              $('.entity-edit-form .AknSubsection > div').addClass('hide');
 
-                    $('.entity-edit-form .AknSubsection > header > .group-label').data('click-handler-attached', true);
-                  }
-
-                  observer.disconnect();
+              $('.entity-edit-form .AknSubsection > header > .group-label').each(function () {
+                const $label = $(this);
+                if (!$label.data('click-handler-attached')) {
+                  $label
+                    .css('cursor', 'pointer')
+                    .on('click', function (e) {
+                      e.preventDefault();
+                      const div = $(e.currentTarget).parent().next();
+                      div.toggleClass('hide');
+                    });
+                  $label.data('click-handler-attached', true);
                 }
               });
-            });
+            }
+          }
 
-            observer.observe(document.body, {
-              childList: true,
-              subtree: true
+          jQuery(function($) {
+            // Run on first load
+            initSubsectionToggler($);
+
+            // Re-run after every AJAX load
+            $(document).ajaxComplete(function() {
+              initSubsectionToggler($);
             });
           });
         </script>
