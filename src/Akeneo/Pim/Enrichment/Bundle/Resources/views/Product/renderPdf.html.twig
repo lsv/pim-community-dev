@@ -1,181 +1,186 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>{{ product.identifier }} - {{ renderingDate|date }}</title>
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-        <style type="text/css">
-            {% if (null != customFont) %}
-                @font-face {
-                    font-family: "Custom font";
-                    font-style: normal;
-                    font-weight: 400;
-                    src: url({{ customFont }}) format('truetype');
-                }
-            {% endif %}
+<head>
+    <title>{{ product.identifier }} - {{ renderingDate|date }}</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <style type="text/css">
+        {% if (null != customFont) %}
+        @font-face {
+            font-family: "Custom font";
+            font-style: normal;
+            font-weight: 400;
+            src: url({{ customFont }}) format('truetype');
+        }
+        {% endif %}
 
-            body {
-                font-family: "Custom font", "DejaVu Sans", monospace;
-                font-weight: 400 !important;
-                font-size: 14px;
-            }
+        body {
+            font-family: "Custom font", "DejaVu Sans", monospace;
+            font-weight: 400 !important;
+            font-size: 14px;
+        }
 
-            .header {
-                margin-bottom: 20px;
-                width: 100%;
-            }
+        .header {
+            margin-bottom: 20px;
+            width: 100%;
+        }
 
-            .header h1 {
-                margin-bottom: 5px;
-            }
+        .header h1 {
+            margin-bottom: 5px;
+        }
 
-            .header .rendering-date {
-                font-size: 15px;
-            }
+        .header .rendering-date {
+            font-size: 15px;
+        }
 
-            .images {
-                margin-top: 50px;
-                width: 100%;
-                overflow: hidden;
-            }
+        .images {
+            margin-top: 50px;
+            width: 100%;
+            overflow: hidden;
+        }
 
-            .images img {
-                max-height: 100px;
-                display: inline-block;
-                margin-right: 20px;
-                margin-bottom: 20px;
-            }
+        .images img {
+            /*max-height: 100px;*/
+            display: inline-block;
+            margin-right: 20px;
+            margin-bottom: 20px;
+        }
 
-            .attribute-groups h2 {
-                width: 100%;
-                padding: 2.5px 5px;
-                font-size: 23px;
-                margin: 0;
-            }
+        .attribute-groups h2 {
+            width: 100%;
+            padding: 2.5px 5px;
+            font-size: 23px;
+            margin: 0;
+        }
 
-            .group {
-                margin-bottom: 20px;
-            }
+        .group {
+            margin-bottom: 20px;
+        }
 
-            .attributes {
-                clear:both;
-                position:relative;
-            }
+        .attributes {
+            clear:both;
+            position:relative;
+        }
 
-            .left-column {
-                position: absolute;
-                left: 0;
-                padding: 5px;
-                width: 35%;
-            }
+        .left-column {
+            position: absolute;
+            left: 0;
+            padding: 5px;
+            width: 35%;
+        }
 
-            .right-column {
-                text-align: right;
-                margin-left: 35%;
-                padding: 5px 0;
-                width: 65%;
-            }
+        .right-column {
+            text-align: right;
+            margin-left: 35%;
+            padding: 5px 0;
+            width: 65%;
+        }
 
-            .attributes.pim_catalog_text.han-text .right-column,
-            .attributes.pim_catalog_textarea.han-text .right-column {
-                font-family: 'fireflysung', "DejaVu Sans", monospace;
-            }
+        .attributes.pim_catalog_text.han-text .right-column,
+        .attributes.pim_catalog_textarea.han-text .right-column {
+            font-family: 'fireflysung', "DejaVu Sans", monospace;
+        }
 
-            table {
-                table-layout: fixed;
-                border-spacing : 0;
-                border-collapse : collapse;
-                margin-left: -250px;
-                margin-top: 30px;
-                width: 450px;
-            }
-            table > thead > tr > th,
-            table > tbody > tr > td {
-                font-size: 9px;
-                height: 29px;
-                padding: 0 10px;
-                text-align: left;
-            }
-            table > thead > tr > th {
-                background: #f0f1f3;
-                border: 1px solid #e8ebee;
-                font-weight: bold;
-            }
-            table > tbody > tr > td {
-                border: 1px solid #e8ebee;
-            }
-            table > tbody > tr:nth-child(2n+1) > td {
-                background: #efefef;
-            }
-            .row-1 {
-                background: #efefef;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="header">
-            {% block header %}
-                <h1>{{ product.getLabel(locale, scope) }} {{ product.identifier != product.getLabel(locale, scope) ? '(' ~ product.identifier ~ ')' : '' }}</h1>
-                <span class="rendering-date">{{ renderingDate|date }}</span>
-            {% endblock %}
-        </div>
-        <div class="short-desc">
-            {% set locale_attribute = shortDescription.isLocalizable or shortDescription.isLocaleSpecific ? locale : null %}
-            {% set channel_attribute = shortDescription.isScopable ? scope : null %}
-            {% set content = product.getValue(shortDescription.code, locale_attribute, channel_attribute) %}
-            {% set attributeValue = render_attribute_value(shortDescription, content, locale)|raw %}
-            {{ attributeValue|raw }}
-        </div>
-        <div class="images">
-            {% block images %}
-                {% for imagePath in imagePaths %}
-                    <img src="media/cache/{{ filter }}/{{ imagePath }}">
+        /*table {*/
+        /*    table-layout: fixed;*/
+        /*    border-spacing : 0;*/
+        /*    border-collapse : collapse;*/
+        /*    margin-left: -250px;*/
+        /*    margin-top: 30px;*/
+        /*    width: 450px;*/
+        /*}*/
+        /*table > thead > tr > th,*/
+        /*table > tbody > tr > td {*/
+        /*    font-size: 9px;*/
+        /*    height: 29px;*/
+        /*    padding: 0 10px;*/
+        /*    text-align: left;*/
+        /*}*/
+        /*table > thead > tr > th {*/
+        /*    background: #f0f1f3;*/
+        /*    border: 1px solid #e8ebee;*/
+        /*    font-weight: bold;*/
+        /*}*/
+        /*table > tbody > tr > td {*/
+        /*    border: 1px solid #e8ebee;*/
+        /*}*/
+        /*table > tbody > tr:nth-child(2n+1) > td {*/
+        /*    background: #efefef;*/
+        /*}*/
+        .row-1 {
+            background: #efefef;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    {% block header %}
+        <h1>{{ product.getLabel(locale, scope) }} {{ product.identifier != product.getLabel(locale, scope) ? '(' ~ product.identifier ~ ')' : '' }}</h1>
+        <span class="rendering-date">{{ renderingDate|date }}</span>
+    {% endblock %}
+</div>
+<div class="images">
+    {% block images %}
+        <table style="width: 100%">
+            <tr>
+                <td rowspan="2" style="vertical-align: middle;text-align: center;">
+                    {% if imagePaths[0] %}
+                        <img style="max-width: 40%" src="media/cache/{{ filter }}/{{ imagePaths[0] }}">
+                    {% endif %}
+                </td>
+                <td style="vertical-align: top;text-align: center;">{% if imagePaths[1] %}<img style="max-width: 30%" src="media/cache/{{ filter }}/{{ imagePaths[1] }}">{% endif %}</td>
+                <td style="vertical-align: top;text-align: center;">{% if imagePaths[2] %}<img style="max-width: 30%" src="media/cache/{{ filter }}/{{ imagePaths[2] }}">{% endif %}</td>
+            </tr>
+            <tr>
+                <td style="vertical-align: bottom;text-align: center;">{% if imagePaths[3] %}<img style="max-width: 30%" src="media/cache/{{ filter }}/{{ imagePaths[3] }}">{% endif %}</td>
+                <td style="vertical-align: bottom;text-align: center;">{% if imagePaths[4] %}<img style="max-width: 30%" src="media/cache/{{ filter }}/{{ imagePaths[4] }}">{% endif %}</td>
+            </tr>
+        </table>
+    {% endblock %}
+</div>
+<div class="long-desc">
+    {% set locale_attribute = longDescription.isLocalizable or longDescription.isLocaleSpecific ? locale : null %}
+    {% set channel_attribute = longDescription.isScopable ? scope : null %}
+    {% set content = product.getValue(longDescription.code, locale_attribute, channel_attribute) %}
+    {% set attributeValue = render_attribute_value(longDescription, content, locale)|raw %}
+    {{ attributeValue|raw }}
+</div>
+<div class="attribute-groups">
+    {% for group, attributes in groupedAttributes %}
+        {% block attribute_group %}
+            <div class="group">
+                <h2 style="text-transform: uppercase">{{ group }}</h2>
+                {% for attribute in attributes %}
+                    {% block attribute %}
+                        {% set locale_attribute = attribute.isLocalizable or attribute.isLocaleSpecific ? locale : null %}
+                        {% set channel_attribute = attribute.isScopable ? scope : null %}
+                        {% set content = product.getValue(attribute.code, locale_attribute, channel_attribute) %}
+                        {% set manualHeight = true %}
+                        {% set attributeValue = render_attribute_value(attribute, content, locale)|raw %}
+
+                        {% if attributeValue is not empty %}
+                            {% if 'pim_catalog_image' == attribute.type and content.data is defined and content.data is not null %}
+                                {% set manualHeight = false %}
+                            {% endif %}
+
+                            {% if content != null and manualHeight == true %}
+                                {% set manualHeight = attribute.label|length > (content|trim|length / 3) %}
+                            {% endif %}
+
+                            <div class="attributes {{ attribute.type }} {% if contains_han_characters(content) %}han-text{% endif %} row-{{ loop.index0 % 2 }}"
+                                    {% if manualHeight %} style="height: {{ (attribute.label|length / 30)|round(0, 'ceil') * 18 + 10 }}px"{% endif %}>
+                                <div class="left-column">
+                                    {{ attribute.label }}
+                                </div>
+                                <div class="right-column">
+                                    {{ attributeValue|raw }}
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endblock %}
                 {% endfor %}
-            {% endblock %}
-        </div>
-        <div class="long-desc">
-            {% set locale_attribute = longDescription.isLocalizable or longDescription.isLocaleSpecific ? locale : null %}
-            {% set channel_attribute = longDescription.isScopable ? scope : null %}
-            {% set content = product.getValue(longDescription.code, locale_attribute, channel_attribute) %}
-            {% set attributeValue = render_attribute_value(longDescription, content, locale)|raw %}
-            {{ attributeValue|raw }}
-        </div>
-        <div class="attribute-groups">
-            {% for group, attributes in groupedAttributes %}
-                {% block attribute_group %}
-                    <div class="group">
-                        <h2>{{ group }}</h2>
-                        {% for attribute in attributes %}
-                            {% block attribute %}
-                                {% set locale_attribute = attribute.isLocalizable or attribute.isLocaleSpecific ? locale : null %}
-                                {% set channel_attribute = attribute.isScopable ? scope : null %}
-                                {% set content = product.getValue(attribute.code, locale_attribute, channel_attribute) %}
-                                {% set manualHeight = true %}
-                                {% set attributeValue = render_attribute_value(attribute, content, locale)|raw %}
-
-                                {% if attributeValue is not empty %}
-                                    {% if 'pim_catalog_image' == attribute.type and content.data is defined and content.data is not null %}
-                                        {% set manualHeight = false %}
-                                    {% endif %}
-
-                                    {% if content != null and manualHeight == true %}
-                                        {% set manualHeight = attribute.label|length > (content|trim|length / 3) %}
-                                    {% endif %}
-
-                                    <div class="attributes {{ attribute.type }} {% if contains_han_characters(content) %}han-text{% endif %} row-{{ loop.index0 % 2 }}"
-                                            {% if manualHeight %} style="height: {{ (attribute.label|length / 30)|round(0, 'ceil') * 18 + 10 }}px"{% endif %}>
-                                        <div class="left-column">
-                                            {{ attribute.label }}
-                                        </div>
-                                        <div class="right-column">
-                                            {{ attributeValue|raw }}
-                                        </div>
-                                    </div>
-                                {% endif %}
-                            {% endblock %}
-                        {% endfor %}
-                    </div>
-                {% endblock %}
-            {% endfor %}
-        </div>
-    </body>
+            </div>
+        {% endblock %}
+    {% endfor %}
+</div>
+</body>
 </html>

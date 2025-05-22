@@ -25,7 +25,7 @@ use Twig\Environment;
 class ProductPdfRenderer implements RendererInterface
 {
     const PDF_FORMAT = 'pdf';
-    const THUMBNAIL_FILTER = 'pdf_thumbnail';
+    const THUMBNAIL_FILTER = 'pdf_thumbnail_large';
 
     protected Environment $templating;
     protected PdfBuilderInterface $pdfBuilder;
@@ -182,6 +182,10 @@ class ProductPdfRenderer implements RendererInterface
         $imagePaths = [];
 
         foreach ($this->getAttributeCodes($product) as $attributeCode) {
+            if (\count($imagePaths) >= 5) {
+                break;
+            }
+
             $attribute = $this->attributeRepository->findOneByIdentifier($attributeCode);
             if (!$this->canRenderAttribute($attribute, true)) {
                 continue;

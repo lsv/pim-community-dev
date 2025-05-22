@@ -56,6 +56,13 @@ liip_imagine:
                 icc_strip: ~
                 downscale: { max: [320, 240] }
 
+        pdf_thumbnail_large:
+            quality: 95
+            format: png
+            filters:
+                icc_strip: ~
+                downscale: { max: [ 3000, 3000 ] }
+
         am_url_image_preview:
             cache: asset_manager_flysystem_cache
             quality:          95
